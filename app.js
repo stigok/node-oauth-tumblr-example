@@ -1,7 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const http = require('http');
 
 const app = express();
 
@@ -25,13 +24,14 @@ app.use(function (req, res, next) {
 // error handlers
 app.use(function (err, req, res, next) {
   res.status(err.status || 500);
-  res.render('error', {
+  res.send(JSON.stringify({
     message: err.message,
-    error: err
-  });
+    error: err,
+    info: 'See console output for more information'
+  }));
 });
 
-http.createServer(app).listen(3000, function (err) {
+app.listen(3000, function (err) {
   if (err) {
     throw err;
   }
