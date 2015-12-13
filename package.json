@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "babel-node src/app.js",
-    "debug": "DEBUG=express:* nodemon --watch ./ --exec babel-node src/app.js"
+    "start": "babel-node -- src/app.js"
   },
   "xo": {
     "space": true
@@ -13,16 +12,10 @@
     "presets": ["es2015"]
   },
   "dependencies": {
+    "babel-preset-es2015": "*",
     "body-parser": "~1.13.2",
     "express": "~4.13.1",
     "express-session": "^1.12.1",
     "oauth": "^0.9.14"
-  },
-  "devDependencies": {
-    "nodemon": "*"
-  },
-  "peerDependencies": {
-    "babel-core": "*",
-    "babel-preset-es2015": "*"
   }
 }
