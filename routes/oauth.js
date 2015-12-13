@@ -4,79 +4,92 @@ const util = require('util');
 const OAuth = require('oauth').OAuth;
 const keys = require('../keys.json');
 
-const consumerKey = keys.tumblr.consumerKey;
-const consumerSecret = keys.tumblr.consumerSecret;
-const callbackUrl = 'http://localhost:4000/callback';
+const appConsumerKey = keys.tumblr.consumerKey;
+const appConsumerSecret = keys.tumblr.consumerSecret;
 const protectedResourceUrl = 'https://api.tumblr.com/v2/blog/developers.tumblr.com/info';
 
+// Tumblr endpoints
 const authorizeUrl = 'https://www.tumblr.com/oauth/authorize';
 const requestTokenUrl = 'https://www.tumblr.com/oauth/request_token';
 const accessTokenUrl = 'https://www.tumblr.com/oauth/access_token';
 
+// OAuth(requestTokenUrl, accessTokenUrl, consumerKey, consumerSecret, OAuthVersion, callbackUrl, digest)
 const oa = new OAuth(
   requestTokenUrl,
   accessTokenUrl,
-  consumerKey,
-  consumerSecret,
+  appConsumerKey,
+  appConsumerSecret,
   '1.0A',
-  callbackUrl,
+  'http://localhost:3000/callback',
   'HMAC-SHA1'
 );
 
-function validateTokens(accessToken, accessTokenSecret, cb) {
-  oa.get(protectedResourceUrl, accessToken, accessTokenSecret, function (err, data) {
-    if (err) {
-      return cb('Tokens are invalid');
-    }
+// Debugging
+// router.use(function (req, res, next) {
+//   console.log('Session information');
+//   console.log('\t', req.session);
+//   next();
+// });
 
-    let d = JSON.parse(data);
-    console.log('data', data);
-    console.log('parsed', d);
+router.get('/callback', function (req, res, next) {
+  console.log('Got callback with params', req.query);
+  console.log('\tSession values are token,secret', req.session.requestToken, req.session.requestTokenSecret);
 
-    return cb(null);
-  });
-}
+  if (!req.session.requestToken || !req.session.requestTokenSecret) {
+    console.error('No requestToken or secret found', req.session.requestToken, req.session.requestTokenSecret);
+    return next('No requestToken found');
+  }
 
-router.use('/callback', function (req, res, next) {
-  console.log('session obj', util.inspect(req.session));
+  console.log('Validating received OAuthAccessToken');
 
   oa.getOAuthAccessToken(
     req.query.oauth_token,
-    req.session.authTokenSecret,
+    req.session.requestTokenSecret,
     req.query.oauth_verifier,
     function (err, token, secret, result) {
       if (err) {
-        console.error('Token mismatch for authToken', token);
-        return next('Token mismatch');
+        console.error('Validation failed with error', err);
+        return next(err);
       }
 
-      validateTokens(token, secret, function (err) {
+      console.log('Testing token by requesting protected resource', protectedResourceUrl);
+
+      oa.get(protectedResourceUrl, token, secret, function (err) {
         if (err) {
-          console.error(err);
+          console.error('Test failed with error', err);
           return next(err);
         }
 
-        console.log(result);
-        return res.send('You are authorized!');
+        console.log('Verification successful!');
+        console.log('\ttoken,secret', token, secret);
+
+        return res.send(JSON.stringify({
+          message: 'You are authorized!',
+          token: token,
+          secret: secret
+        }));
       });
     }
   );
 });
 
-router.use('/', function (req, res, next) {
-  console.log('session obj', util.inspect(req.session));
-
+router.get('/', function (req, res, next) {
+  console.log('Requesting a token and secret...');
   oa.getOAuthRequestToken(function (err, token, secret) {
     if (err) {
       console.error('Failed to get a request token', err);
       return next(err);
     }
+    console.log('\t%s : %s', token, secret);
 
-    req.session.authToken = token;
-    req.session.authTokenSecret = secret;
+    // Save generated tokens to session
+    req.session.requestToken = token;
+    req.session.requestTokenSecret = secret;
 
     let authUrl = authorizeUrl + '?oauth_token=' + token;
     let html = util.format('<a href="%s">%s</a>', authUrl, authUrl);
+
+    console.log('Supplying auth url %s', authUrl);
 
     return res.status(200).send(html);
   });
