@@ -2,7 +2,8 @@ const express = require('express');
 const router = new express.Router();
 const util = require('util');
 const OAuth = require('oauth').OAuth;
-const keys = require('../keys.json');
+
+const keys = require('../../keys.json');
 
 const appConsumerKey = keys.tumblr.consumerKey;
 const appConsumerSecret = keys.tumblr.consumerSecret;

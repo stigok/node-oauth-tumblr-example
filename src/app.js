@@ -7,7 +7,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(session({
-  secret: 'CHANGE_THIS_SECRET',
+  secret: 'CHANGE_THIS_SECRET (if you want to)',
   resave: false,
   saveUninitialized: true
 }));

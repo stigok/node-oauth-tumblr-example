@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "babel-node app.js",
-    "debug": "DEBUG=express:* nodemon --watch ./ --exec babel-node app.js"
+    "start": "babel-node src/app.js",
+    "debug": "DEBUG=express:* nodemon --watch ./ --exec babel-node src/app.js"
   },
   "xo": {
     "space": true
