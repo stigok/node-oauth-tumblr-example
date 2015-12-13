@@ -87,12 +87,7 @@ router.get('/callback', function (req, res, next) {
       }
 
       console.log('\tVerification successful!');
-
-      return res.send(JSON.stringify({
-        message: 'You are authorized!',
-        token: token,
-        secret: secret
-      }));
+      return res.send(util.format('<strong>Authorization successful!</strong><br>token: %s<br>secret: %s', token, secret));
     });
   }
 });
