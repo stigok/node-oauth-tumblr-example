@@ -57,8 +57,8 @@ router.get('/callback', function (req, res, next) {
   console.log('\tsession token %s | session secret %s', req.session.requestToken, req.session.requestTokenSecret);
 
   if (!req.session.requestToken || !req.session.requestTokenSecret) {
-    console.error('Error: Missing session information');
-    return next('No requestToken found');
+    console.error('\tError: Missing session information');
+    return next('No previous session info found');
   }
 
   console.log('getOAuthAccessToken');
@@ -69,29 +69,32 @@ router.get('/callback', function (req, res, next) {
     req.query.oauth_verifier,
     function (err, token, secret) {
       if (err) {
-        console.error('Validation failed with error', err);
-        return next(err);
+        console.error('\tValidation failed with error', err);
+        return next('getOAuthAccessToken failed');
       }
       console.log('\ttoken %s | secret %s', token, secret);
 
-      console.log('Test accessToken', protectedResourceUrl);
-
-      oa.get(protectedResourceUrl, token, secret, function (err) {
-        if (err) {
-          console.error('\tFailed with error', err);
-          return next(err);
-        }
-
-        console.log('\tVerification successful!');
-
-        return res.send(JSON.stringify({
-          message: 'You are authorized!',
-          token: token,
-          secret: secret
-        }));
-      });
+      testOAuthToken(token, secret);
     }
   );
+
+  function testOAuthToken(token, secret) {
+    console.log('Test accessToken', protectedResourceUrl);
+    oa.get(protectedResourceUrl, token, secret, function (err) {
+      if (err) {
+        console.error('\tFailed with error', err);
+        return next('Error testing OAuthToken');
+      }
+
+      console.log('\tVerification successful!');
+
+      return res.send(JSON.stringify({
+        message: 'You are authorized!',
+        token: token,
+        secret: secret
+      }));
+    });
+  }
 });
 
 module.exports = router;
