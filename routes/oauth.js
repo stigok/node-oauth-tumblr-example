@@ -6,6 +6,8 @@ const keys = require('../keys.json');
 
 const appConsumerKey = keys.tumblr.consumerKey;
 const appConsumerSecret = keys.tumblr.consumerSecret;
+
+// Used for testing an API call with aquired token and secret
 const protectedResourceUrl = 'https://api.tumblr.com/v2/blog/developers.tumblr.com/info';
 
 // Tumblr endpoints
@@ -46,7 +48,7 @@ router.get('/callback', function (req, res, next) {
     req.query.oauth_token,
     req.session.requestTokenSecret,
     req.query.oauth_verifier,
-    function (err, token, secret, result) {
+    function (err, token, secret) {
       if (err) {
         console.error('Validation failed with error', err);
         return next(err);
@@ -61,7 +63,7 @@ router.get('/callback', function (req, res, next) {
         }
 
         console.log('Verification successful!');
-        console.log('\ttoken,secret', token, secret);
+        console.log('\t', token, secret);
 
         return res.send(JSON.stringify({
           message: 'You are authorized!',

@@ -14,21 +14,16 @@ app.use(session({
 
 app.use('/', require('./routes/oauth'));
 
-// catch 404 and forward to error handler
-app.use(function (req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
-
-// error handlers
+// catch-all error handler
 app.use(function (err, req, res, next) {
+  // If there are no errors here, it must be 404
+  if (!err) {
+    err = new Error('Not found');
+    res.status = 404;
+  }
+
   res.status(err.status || 500);
-  res.send(JSON.stringify({
-    message: err.message,
-    error: err,
-    info: 'See console output for more information'
-  }));
+  return res.send(JSON.stringify(err, null, 2));
 });
 
 app.listen(3000, function (err) {
