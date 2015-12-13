@@ -53,7 +53,7 @@ router.get('/', function (req, res, next) {
 
 router.get('/callback', function (req, res, next) {
   console.log('Received callback');
-  console.log('\toauth_token %s | oauth_verifier %s', req.params.oauth_token, req.params.oauth_verifier);
+  console.log('\toauth_token %s | oauth_verifier %s', req.query.oauth_token, req.query.oauth_verifier);
   console.log('\tsession token %s | session secret %s', req.session.requestToken, req.session.requestTokenSecret);
 
   if (!req.session.requestToken || !req.session.requestTokenSecret) {
