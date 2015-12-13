@@ -1,6 +1,7 @@
 {
   "name": "tumblr-oauth-example",
   "version": "0.0.0",
+  "private": true,
   "scripts": {
     "start": "babel-node app.js"
   },
