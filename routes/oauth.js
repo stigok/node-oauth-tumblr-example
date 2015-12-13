@@ -26,23 +26,41 @@ const oa = new OAuth(
   'HMAC-SHA1'
 );
 
-// Debugging
-// router.use(function (req, res, next) {
-//   console.log('Session information');
-//   console.log('\t', req.session);
-//   next();
-// });
+router.get('/', function (req, res, next) {
+  console.log('getOAuthRequestToken');
+  oa.getOAuthRequestToken(function (err, token, secret) {
+    if (err) {
+      console.error('\tFailed with error', err);
+      return next(err);
+    }
+    console.log('\ttoken %s | secret %s', token, secret);
+
+    // Save generated tokens to session
+    req.session.requestToken = token;
+    req.session.requestTokenSecret = secret;
+
+    let authUrl = authorizeUrl + '?oauth_token=' + token;
+    let html = util.format('<a href="%s">%s</a>', authUrl, authUrl);
+
+    console.log('Direct client to authUrl');
+    console.log('\t' + authUrl);
+    console.log('\t... waiting for callback');
+
+    return res.status(200).send(html);
+  });
+});
 
 router.get('/callback', function (req, res, next) {
-  console.log('Got callback with params', req.query);
-  console.log('\tSession values are token,secret', req.session.requestToken, req.session.requestTokenSecret);
+  console.log('Received callback');
+  console.log('\toauth_token %s | oauth_verifier %s', req.params.oauth_token, req.params.oauth_verifier);
+  console.log('\tsession token %s | session secret %s', req.session.requestToken, req.session.requestTokenSecret);
 
   if (!req.session.requestToken || !req.session.requestTokenSecret) {
-    console.error('No requestToken or secret found', req.session.requestToken, req.session.requestTokenSecret);
+    console.error('Error: Missing session information');
     return next('No requestToken found');
   }
 
-  console.log('Validating received OAuthAccessToken');
+  console.log('getOAuthAccessToken');
 
   oa.getOAuthAccessToken(
     req.query.oauth_token,
@@ -53,17 +71,17 @@ router.get('/callback', function (req, res, next) {
         console.error('Validation failed with error', err);
         return next(err);
       }
+      console.log('\ttoken %s | secret %s', token, secret);
 
-      console.log('Testing token by requesting protected resource', protectedResourceUrl);
+      console.log('Test accessToken', protectedResourceUrl);
 
       oa.get(protectedResourceUrl, token, secret, function (err) {
         if (err) {
-          console.error('Test failed with error', err);
+          console.error('\tFailed with error', err);
           return next(err);
         }
 
-        console.log('Verification successful!');
-        console.log('\t', token, secret);
+        console.log('\tVerification successful!');
 
         return res.send(JSON.stringify({
           message: 'You are authorized!',
@@ -73,28 +91,6 @@ router.get('/callback', function (req, res, next) {
       });
     }
   );
-});
-
-router.get('/', function (req, res, next) {
-  console.log('Requesting a token and secret...');
-  oa.getOAuthRequestToken(function (err, token, secret) {
-    if (err) {
-      console.error('Failed to get a request token', err);
-      return next(err);
-    }
-    console.log('\t%s : %s', token, secret);
-
-    // Save generated tokens to session
-    req.session.requestToken = token;
-    req.session.requestTokenSecret = secret;
-
-    let authUrl = authorizeUrl + '?oauth_token=' + token;
-    let html = util.format('<a href="%s">%s</a>', authUrl, authUrl);
-
-    console.log('Supplying auth url %s', authUrl);
-
-    return res.status(200).send(html);
-  });
 });
 
 module.exports = router;
