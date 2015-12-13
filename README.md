@@ -17,7 +17,7 @@ Install dependencies
 
 Edit [`keys.sample.json`](./keys.sample.json) with your app consumer key and secret, and save it as `keys.json`.
 If you don't have these, you can register to use the Tumblr API at https://www.tumblr.com/oauth/apps.
-Remember to set the default callback url to `http://localhost:3000/callback` when creating the application.
+Set the default callback url to `http://localhost:3000/callback` when creating the application.
 
 Open http://localhost:3000 to start token request process.
 
